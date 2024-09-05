@@ -6,8 +6,6 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-// tcp_ping 函數保持不變
-
 fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
     let addr = format!("{}:{}", host, port);
     let socket_addrs: Vec<_> = match addr.to_socket_addrs() {
@@ -28,7 +26,7 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
             .iter()
             .find(|a| a.is_ipv4())
             .unwrap_or_else(|| {
-                // eprintln!("未找到IPv4地址，使用第一个可用地址");
+                // eprintln!("Cannot find ipv4 address, use IPv6 instead");
                 &socket_addrs[0]
             })
     } else {
@@ -61,7 +59,7 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
         }
 
         let start_time = Instant::now();
-        match TcpStream::connect_timeout(ip, Duration::from_secs(5)) {
+        match TcpStream::connect_timeout(ip, Duration::from_millis(1000)) {
             Ok(_) => {
                 let delay = start_time.elapsed().as_secs_f64() * 1000.0;
                 delays.push(delay);
@@ -92,7 +90,7 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
         thread::sleep(Duration::from_secs(1));
     }
 
-    // 顯示統計信息
+    // Show statistical information
     if !delays.is_empty() {
         let loss_rate = (packets_sent - packets_received) as f64 / packets_sent as f64 * 100.0;
         println!("\n--- {} tcp ping statistics ---", host);
