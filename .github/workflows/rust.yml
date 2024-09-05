@@ -67,9 +67,32 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           if [[ "${{ matrix.target }}" == *"-pc-windows-"* ]]; then
-            7z a ../../../tcpping-${{ matrix.target }}.zip tcpping.exe
+            OS="windows"
+            if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
+              ARCH="amd64"
+            else
+              ARCH="arm64"
+            fi
+            EXT="zip"
+            7z a ../../../tcpping-${OS}-${ARCH}.${EXT} tcpping.exe
+          elif [[ "${{ matrix.target }}" == *"-apple-darwin" ]]; then
+            OS="darwin"
+            if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
+              ARCH="amd64"
+            else
+              ARCH="arm64"
+            fi
+            EXT="tar.gz"
+            tar czvf ../../../tcpping-${OS}-${ARCH}.${EXT} tcpping
           else
-            tar czvf ../../../tcpping-${{ matrix.target }}.tar.gz tcpping
+            OS="linux"
+            if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
+              ARCH="amd64"
+            else
+              ARCH="arm64"
+            fi
+            EXT="tar.gz"
+            tar czvf ../../../tcpping-${OS}-${ARCH}.${EXT} tcpping
           fi
           cd -
 
@@ -77,7 +100,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: tcpping-${{ matrix.target }}
-          path: tcpping-${{ matrix.target }}.*
+          path: tcpping-*.tar.gz tcpping-*.zip
 
   release:
     needs: build
@@ -93,7 +116,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: tcpping ${{ github.ref_name }}
           draft: false
           prerelease: false
 

@@ -117,7 +117,10 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     match args.get(1).map(|s| s.as_str()) {
         Some("-v") | Some("--version") => {
-            println!("tcp_ping version 0.1.2");
+            let version = env!("CARGO_PKG_VERSION");
+            let arch = std::env::consts::ARCH;
+            let os = std::env::consts::OS;
+            println!("tcpping version {} ({}/{})", version, os, arch);
             process::exit(0);
         }
         Some("-h") | Some("--help") => {
