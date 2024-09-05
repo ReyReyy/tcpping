@@ -8,7 +8,8 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.runner }}
-    if: github.ref == 'refs/heads/master'
+    # 移除这一行
+    # if: github.ref == 'refs/heads/master'
 
     strategy:
       matrix:
