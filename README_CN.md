@@ -65,3 +65,9 @@ Connected to 172.217.160.78:443: tcp_seq=3 time=5.488 ms
 4 packets transmitted, 4 packets received, 0.0% packet loss
 round-trip min/avg/max/stddev = 3.297/4.107/5.488/0.825 ms
 ```
+
+## 感谢
+
+感谢 [cursor IDE](https://www.cursor.com/)。<br>
+这个项目 90% 是由 cursor IDE 生成的。<br>
+其实我完全不会写 rust 代码 :P<br>
