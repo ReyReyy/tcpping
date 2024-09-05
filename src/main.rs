@@ -122,6 +122,13 @@ fn main() {
             println!("tcp_ping version 0.1.0");
             process::exit(0);
         }
+        Some("-h") | Some("--help") => {
+            eprintln!(
+                "Usage: {} <host> [--port <port>] [--IPv4 | --IPv6] [--count <count>]",
+                args[0]
+            );
+            process::exit(0);
+        }
         _ => {}
     }
 
