@@ -95,12 +95,13 @@ jobs:
             tar czvf ../../../tcpping-${OS}-${ARCH}.${EXT} tcpping
           fi
           cd -
+          ls -l tcpping-*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: tcpping-${{ matrix.target }}
-          path: tcpping-*.tar.gz tcpping-*.zip
+          path: tcpping-*.*
 
   release:
     needs: build
@@ -123,13 +124,15 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
 
+      - name: Display structure of downloaded files
+        run: ls -R
+
       - name: Upload Release Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for asset in tcpping-*/tcpping-*; do
             asset_name=$(basename "$asset")
             echo "Uploading $asset_name"
-            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                 -H "Content-Type: $(file -b --mime-type "$asset")" \
-                 --data-binary @"$asset" \
-                 "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=$asset_name"
+            gh release upload ${{ github.ref_name }} "$asset" --clobber
           done
