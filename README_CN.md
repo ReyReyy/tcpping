@@ -1,42 +1,42 @@
-English | [中文](https://github.com/ReyReyy/tcpping/blob/main/README_CN.md)
+[English](https://github.com/ReyReyy/tcpping/blob/main/README.md) | 中文
 
 # Tcp ping
 
-Testing server latency like command "ping", but with tcp!
+像 “ping” 命令一样测试服务器延迟，但使用 tcp 协议！
 
-## Usage
-
-```
-tcpping <IP Address> [SUBCOMMAND]
-```
-
-Ctrl + C to stop.
-
-## Subcommands
+## 用法
 
 ```
-[-p | --port] <port>               Add port
-[-4 | --IPv4]                      Force IPv4
-[-6 | --IPv6]                      Force IPv6
-[-c | --count] <count>             Test <count> times, 0 is unlimited.
-[-v | --versioin]                  Show version
-[-h | --help]                      Show help
+tcpping <IP 地址> [子命令]
 ```
 
-Default:
+Ctrl + C 停止。
 
-- Port: 80
-- IP Version: IPv6
-- Count: 0 (Unlimited)
+## 子命令
 
-## How to Install (Recommend)
+```
+[-p | --port] <port>               添加端口
+[-4 | --IPv4]                      强制使用 IPv4
+[-6 | --IPv6]                      强制使用 IPv6
+[-c | --count] <count>             测试 <count> 次，0 是不限制次数。
+[-v | --version]                   显示版本
+[-h | --help]                      显示帮助
+```
 
-Put the `tcpping` file in to `/usr/local/bin` <br>
-Then you can use it in your Terminal as a normal command :)
+默认:
 
-## Sample:
+- 端口: 80
+- IP 版本: IPv6
+- 次数: 0（无限）
 
-Use as default:
+## 如何安装（推荐）
+
+将 `tcpping` 文件放入 `/usr/local/bin` <br>
+然后你就可以在终端中像正常命令一样使用它 :)
+
+## 示例：
+
+使用默认配置：
 
 ```
 reyreyy@ReMac ~ % tcpping google.com
@@ -51,7 +51,7 @@ Connected to 2404:6800:4012::200e:80: tcp_seq=3 time=6.308 ms
 round-trip min/avg/max/stddev = 2.676/4.313/6.308/1.343 ms
 ```
 
-Force port and IP version:
+指定端口和 IP 版本：
 
 ```
 reyreyy@ReMac ~ % tcpping google.com -p 443 -4
