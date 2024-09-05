@@ -2,15 +2,46 @@ name: Rust Cross Compile and Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - master
 
 jobs:
-  build:
-    runs-on: ${{ matrix.runner }}
-    # 移除这一行
-    # if: github.ref == 'refs/heads/master'
+  check_version_and_release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      should_release: ${{ steps.check_version.outputs.should_release }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      - name: Get version from Cargo.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/.*= *"//' | sed 's/".*//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_version
+        run: |
+          if ! git ls-remote --exit-code --tags origin refs/tags/v${{ steps.get_version.outputs.version }} >/dev/null 2>&1; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.check_version.outputs.should_release == 'true'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -a v${{ steps.get_version.outputs.version }} -m "Release v${{ steps.get_version.outputs.version }}"
+          git push origin v${{ steps.get_version.outputs.version }}
+
+  build:
+    needs: check_version_and_release
+    if: needs.check_version_and_release.outputs.should_release == 'true'
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         target:
@@ -37,11 +68,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Get version
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-        shell: bash
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -72,7 +98,7 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          VERSION=${{ steps.get_version.outputs.VERSION }}
+          VERSION=${{ needs.check_version_and_release.outputs.version }}
           cd target/${{ matrix.target }}/release
           if [[ "${{ matrix.target }}" == *"-pc-windows-"* ]]; then
             OS="windows"
@@ -112,7 +138,8 @@ jobs:
           path: tcpping-v*.*
 
   release:
-    needs: build
+    needs: [check_version_and_release, build]
+    if: needs.check_version_and_release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -124,10 +151,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: tcpping ${{ github.ref_name }}
+          tag_name: v${{ needs.check_version_and_release.outputs.version }}
+          release_name: tcpping v${{ needs.check_version_and_release.outputs.version }}
           draft: false
-          prerelease: ${{ contains(github.ref, '-beta') }}
+          prerelease: ${{ contains(needs.check_version_and_release.outputs.version, '-beta') }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -142,5 +169,5 @@ jobs:
           for asset in tcpping-*/tcpping-v*; do
             asset_name=$(basename "$asset")
             echo "Uploading $asset_name"
-            gh release upload ${{ github.ref_name }} "$asset" --clobber
+            gh release upload v${{ needs.check_version_and_release.outputs.version }} "$asset" --clobber
           done
