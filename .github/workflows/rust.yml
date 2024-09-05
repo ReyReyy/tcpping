@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.runner }}
+    if: github.ref == 'refs/heads/master'
 
     strategy:
       matrix:
@@ -35,6 +36,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Get version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -65,34 +71,35 @@ jobs:
       - name: Package
         shell: bash
         run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
           cd target/${{ matrix.target }}/release
           if [[ "${{ matrix.target }}" == *"-pc-windows-"* ]]; then
             OS="windows"
             if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
-              ARCH="amd64"
+              ARCH="x86_64"
             else
-              ARCH="arm64"
+              ARCH="aarch64"
             fi
             EXT="zip"
-            7z a ../../../tcpping-${OS}-${ARCH}.${EXT} tcpping.exe
+            7z a ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping.exe
           elif [[ "${{ matrix.target }}" == *"-apple-darwin" ]]; then
             OS="darwin"
             if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
-              ARCH="amd64"
+              ARCH="x86_64"
             else
-              ARCH="arm64"
+              ARCH="aarch64"
             fi
             EXT="tar.gz"
-            tar czvf ../../../tcpping-${OS}-${ARCH}.${EXT} tcpping
+            tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping
           else
             OS="linux"
             if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
-              ARCH="amd64"
+              ARCH="x86_64"
             else
-              ARCH="arm64"
+              ARCH="aarch64"
             fi
             EXT="tar.gz"
-            tar czvf ../../../tcpping-${OS}-${ARCH}.${EXT} tcpping
+            tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping
           fi
           cd -
           ls -l tcpping-*
@@ -101,7 +108,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: tcpping-${{ matrix.target }}
-          path: tcpping-*.*
+          path: tcpping-v*.*
 
   release:
     needs: build
@@ -119,7 +126,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: tcpping ${{ github.ref_name }}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref, '-beta') }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -131,7 +138,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for asset in tcpping-*/tcpping-*; do
+          for asset in tcpping-*/tcpping-v*; do
             asset_name=$(basename "$asset")
             echo "Uploading $asset_name"
             gh release upload ${{ github.ref_name }} "$asset" --clobber
