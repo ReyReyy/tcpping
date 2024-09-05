@@ -51,6 +51,7 @@ jobs:
           - aarch64-pc-windows-msvc
           - aarch64-apple-darwin
           - x86_64-apple-darwin
+          - mipsel-unknown-linux-musl # OpenWRT 常用架构
         include:
           - target: x86_64-unknown-linux-gnu
             runner: ubuntu-latest
@@ -64,6 +65,8 @@ jobs:
             runner: macos-latest
           - target: x86_64-apple-darwin
             runner: macos-latest
+          - target: mipsel-unknown-linux-musl
+            runner: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -82,6 +85,9 @@ jobs:
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             sudo apt-get update
             sudo apt-get install -y gcc-aarch64-linux-gnu
+          elif [ "${{ matrix.target }}" = "mipsel-unknown-linux-musl" ]; then
+            sudo apt-get update
+            sudo apt-get install -y gcc-mipsel-linux-gnu
           fi
         shell: bash
 
@@ -89,6 +95,9 @@ jobs:
         run: |
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+            cargo build --release --target ${{ matrix.target }}
+          elif [ "${{ matrix.target }}" = "mipsel-unknown-linux-musl" ]; then
+            export CARGO_TARGET_MIPSEL_UNKNOWN_LINUX_MUSL_LINKER=mipsel-linux-gnu-gcc
             cargo build --release --target ${{ matrix.target }}
           else
             cargo build --release --target ${{ matrix.target }}
@@ -122,8 +131,13 @@ jobs:
             OS="linux"
             if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
               ARCH="x86_64"
-            else
+            elif [[ "${{ matrix.target }}" == "aarch64-"* ]]; then
               ARCH="aarch64"
+            elif [[ "${{ matrix.target }}" == "mipsel-"* ]]; then
+              ARCH="mipsel"
+              OS="openwrt"
+            else
+              ARCH="unknown"
             fi
             EXT="tar.gz"
             tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping
