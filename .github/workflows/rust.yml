@@ -84,7 +84,7 @@ jobs:
             EXT="zip"
             7z a ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping.exe
           elif [[ "${{ matrix.target }}" == *"-apple-darwin" ]]; then
-            OS="darwin"
+            OS="macos"
             if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
               ARCH="x86_64"
             else
