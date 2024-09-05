@@ -1,4 +1,4 @@
-[English](https://github.com/ReyReyy/tcpping/blob/main/README.md) | 中文
+[English](https://github.com/ReyReyy/tcpping/blob/master/README.md) | 中文
 
 # Tcp ping
 
