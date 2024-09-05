@@ -62,13 +62,22 @@ jobs:
           fi
         shell: bash
 
+      - name: Package
+        shell: bash
+        run: |
+          cd target/${{ matrix.target }}/release
+          if [[ "${{ matrix.target }}" == *"-pc-windows-"* ]]; then
+            7z a ../../../tcpping-${{ matrix.target }}.zip tcpping.exe
+          else
+            tar czvf ../../../tcpping-${{ matrix.target }}.tar.gz tcpping
+          fi
+          cd -
+
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: tcpping-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/release/tcpping
-            target/${{ matrix.target }}/release/tcpping.exe
+          path: tcpping-${{ matrix.target }}.*
 
   release:
     needs: build
@@ -93,12 +102,11 @@ jobs:
 
       - name: Upload Release Assets
         run: |
-          for asset in tcpping-*/tcpping*; do
+          for asset in tcpping-*/tcpping-*; do
             asset_name=$(basename "$asset")
-            target=$(echo "$asset" | cut -d'/' -f1 | cut -d'-' -f2-)
-            echo "Uploading $asset_name for $target"
+            echo "Uploading $asset_name"
             curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                 -H "Content-Type: application/octet-stream" \
+                 -H "Content-Type: $(file -b --mime-type "$asset")" \
                  --data-binary @"$asset" \
-                 "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=tcpping-$target"
+                 "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=$asset_name"
           done
