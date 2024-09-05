@@ -117,6 +117,14 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    match args.get(1).map(|s| s.as_str()) {
+        Some("-v") | Some("--version") => {
+            println!("tcp_ping version 0.1.0");
+            process::exit(0);
+        }
+        _ => {}
+    }
+
     if args.len() < 2 {
         eprintln!(
             "Usage: {} <host> [--port <port>] [--IPv4 | --IPv6] [--count <count>]",
