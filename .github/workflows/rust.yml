@@ -1,11 +1,9 @@
-name: Rust Cross Compile
+name: Rust Cross Compile and Release
 
 on:
   push:
-    branches:
-      - master
-    paths:
-      - "**/*"
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -64,8 +62,43 @@ jobs:
           fi
         shell: bash
 
-      - name: Upload Artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}-release
-          path: target/${{ matrix.target }}/release/
+          name: tcpping-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/tcpping
+            target/${{ matrix.target }}/release/tcpping.exe
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Upload Release Assets
+        run: |
+          for asset in tcpping-*/tcpping*; do
+            asset_name=$(basename "$asset")
+            target=$(echo "$asset" | cut -d'/' -f1 | cut -d'-' -f2-)
+            echo "Uploading $asset_name for $target"
+            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                 -H "Content-Type: application/octet-stream" \
+                 --data-binary @"$asset" \
+                 "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=tcpping-$target"
+          done
