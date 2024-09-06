@@ -2,6 +2,12 @@
 
 set -e
 
+# Check if the user is root or using sudo
+if [ "$EUID" -ne 0 ]; then
+    echo "Please use sudo or run this script as root"
+    exit 1
+fi
+
 # Get OS and Architecture
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
