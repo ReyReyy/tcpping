@@ -18,7 +18,7 @@ Ctrl + C 停止。
 [-p | --port] <port>               添加端口
 [-4 | --IPv4]                      强制使用 IPv4
 [-6 | --IPv6]                      强制使用 IPv6
-[-c | --count] <count>             测试 <count> 次，0 是不限制次数。
+[-c | --count] <count>             测试 <count> 次，0 是不限制次数
 [-v | --version]                   显示版本
 [-h | --help]                      显示帮助
 ```
@@ -41,9 +41,9 @@ Ctrl + C 停止。
 
 - ### Windows
 
-  从 [发布页面](https://github.com/ReyReyy/tcpping/releases) 下载正式版。
+  从 [发布页面](https://github.com/ReyReyy/tcpping/releases) 下载正式版
 
-  解压 zip 文件然后运行 `tcpping.exe`。
+  解压 zip 文件然后运行 `tcpping.exe`
 
 ## 卸载
 
@@ -57,7 +57,7 @@ Ctrl + C 停止。
 
 - ### Windows
 
-  删除 `tcpping.exe` 文件就行。
+  删除 `tcpping.exe` 文件就行
 
 ## 示例：
 
@@ -93,6 +93,6 @@ round-trip min/avg/max/stddev = 3.297/4.107/5.488/0.825 ms
 
 ## 感谢
 
-感谢 [cursor IDE](https://www.cursor.com/)。<br>
-这个项目 90% 是由 cursor IDE 生成的。<br>
+感谢 [cursor IDE](https://www.cursor.com/)<br>
+这个项目 90% 是由 cursor IDE 生成的<br>
 其实我完全不会写 rust 代码 :P<br>

@@ -15,12 +15,12 @@ Ctrl + C to stop.
 ## Subcommands
 
 ```
-[-p | --port] <port>               Add port
-[-4 | --IPv4]                      Force IPv4
-[-6 | --IPv6]                      Force IPv6
+[-p | --port] <port>               Add port.
+[-4 | --IPv4]                      Force IPv4.
+[-6 | --IPv6]                      Force IPv6.
 [-c | --count] <count>             Test <count> times, 0 is unlimited.
-[-v | --versioin]                  Show version
-[-h | --help]                      Show help
+[-v | --version]                   Show version.
+[-h | --help]                      Show help.
 ```
 
 Default:
