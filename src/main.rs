@@ -1,5 +1,5 @@
 use std::env;
-use std::net::{TcpStream, ToSocketAddrs};
+use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::process;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -25,10 +25,7 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
         socket_addrs
             .iter()
             .find(|a| a.is_ipv4())
-            .unwrap_or_else(|| {
-                // eprintln!("Cannot find ipv4 address, use IPv6 instead");
-                &socket_addrs[0]
-            })
+            .unwrap_or_else(|| &socket_addrs[0])
     } else {
         socket_addrs
             .iter()
@@ -36,7 +33,21 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
             .unwrap_or(&socket_addrs[0])
     };
 
-    println!("TCP PING {} ({}):{}", host, ip.ip(), port);
+    let is_ipv6 = ip.is_ipv6();
+    let ip_str = if is_ipv6 {
+        format!("[{}]", ip.ip())
+    } else {
+        ip.ip().to_string()
+    };
+
+    // 判断 host 是否为 IP 地址
+    let host_is_ip = host.parse::<IpAddr>().is_ok();
+
+    if host_is_ip {
+        println!("TCP PING {}:{}", ip_str, port);
+    } else {
+        println!("TCP PING {} {}:{}", host, ip_str, port);
+    }
 
     let mut delays = Vec::new();
     let mut packets_sent = 0;
@@ -66,21 +77,15 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
                 packets_sent += 1;
                 packets_received += 1;
                 println!(
-                    "Connected to {}#{}: tcp_seq={} time={:.3} ms",
-                    ip.ip(),
-                    port,
-                    seq,
-                    delay
+                    "Connected to {}:{}: tcp_seq={} time={:.3} ms",
+                    ip_str, port, seq, delay
                 );
             }
             Err(e) => {
                 packets_sent += 1;
                 println!(
-                    "Failed to connect to {}#{}: tcp_seq={} {}",
-                    ip.ip(),
-                    port,
-                    seq,
-                    e
+                    "Failed to connect to {}:{}: tcp_seq={} {}",
+                    ip_str, port, seq, e
                 );
             }
         }
