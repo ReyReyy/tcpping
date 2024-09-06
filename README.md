@@ -29,10 +29,35 @@ Default:
 - IP Version: IPv6
 - Count: 0 (Unlimited)
 
-## How to Install (Recommend)
+## How to Install
 
-Put the `tcpping` file in to `/usr/local/bin` <br>
-Then you can use it in your Terminal as a normal command :)
+- ### Linux & MacOS
+
+  You can install it by running a simple command:
+
+  ```
+  sudo bash -c "$(curl -L -s tcpping.reyreyy.net)"
+  ```
+
+- ### Windows
+
+  Download from [Release Page](https://github.com/ReyReyy/tcpping/releases).
+
+  Unzip the zip file then run `tcpping.exe`.
+
+## Uninstall
+
+- ### Linux & MacOS
+
+  Use `rm` command to uninstall:
+
+  ```
+  sudo rm -f /usr/local/bin/tcpping
+  ```
+
+- ### Windows
+
+  Just delete the `tcpping.exe` file.
 
 ## Sample:
 

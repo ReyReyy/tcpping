@@ -29,10 +29,35 @@ Ctrl + C 停止。
 - IP 版本: IPv6
 - 次数: 0（无限）
 
-## 如何安装（推荐）
+## 如何安装
 
-将 `tcpping` 文件放入 `/usr/local/bin` <br>
-然后你就可以在终端中像正常命令一样使用它 :)
+- ### Linux & MacOS
+
+  你可以通过运行一个简单的命令来安装它：
+
+  ```
+  sudo bash -c "$(curl -L -s tcpping.reyreyy.net)"
+  ```
+
+- ### Windows
+
+  从 [发布页面](https://github.com/ReyReyy/tcpping/releases) 下载正式版。
+
+  解压 zip 文件然后运行 `tcpping.exe`。
+
+## 卸载
+
+- ### Linux & MacOS
+
+  使用 `rm` 命令卸载：
+
+  ```
+  sudo rm -f /usr/local/bin/tcpping
+  ```
+
+- ### Windows
+
+  删除 `tcpping.exe` 文件就行。
 
 ## 示例：
 
