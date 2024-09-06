@@ -83,5 +83,8 @@ rm -rf "$TEMP_DIR"
 
 echo "tcpping has been installed successfully"
 
+# Check if tcpping is installed correctly
+tcpping --version
+
 # Delete script itself
 rm -f "$0"
