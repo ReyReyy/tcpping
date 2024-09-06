@@ -40,7 +40,7 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
         ip.ip().to_string()
     };
 
-    // 判断 host 是否为 IP 地址
+    // Check if host is an IP address
     let host_is_ip = host.parse::<IpAddr>().is_ok();
 
     if host_is_ip {
@@ -77,14 +77,14 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
                 packets_sent += 1;
                 packets_received += 1;
                 println!(
-                    "Connected to {}:{}: tcp_seq={} time={:.3} ms",
+                    "Connected to {}:{}, tcp_seq={} time={:.3} ms",
                     ip_str, port, seq, delay
                 );
             }
             Err(e) => {
                 packets_sent += 1;
                 println!(
-                    "Failed to connect to {}:{}: tcp_seq={} {}",
+                    "Failed to connect to {}:{}, tcp_seq={} {}",
                     ip_str, port, seq, e
                 );
             }
