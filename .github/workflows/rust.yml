@@ -6,6 +6,11 @@ on:
       - master
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "v0.1.6-beta.5"
+        required: true
 
 jobs:
   check_version_and_release:
@@ -17,11 +22,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Get version from Cargo.toml
+      - name: Get version
         id: get_version
         run: |
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/.*= *"//' | sed 's/".*//')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            VERSION=$(grep '^version =' Cargo.toml | sed 's/.*= *"//' | sed 's/".*//')
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check if tag exists
         id: check_version
