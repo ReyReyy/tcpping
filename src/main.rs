@@ -1,4 +1,5 @@
 use std::env;
+use std::io::ErrorKind;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::process;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -25,11 +26,29 @@ fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<
         Some(IpAddr::V4(_)) => socket_addrs.iter().find(|addr| addr.is_ipv4()),
         Some(IpAddr::V6(_)) => socket_addrs.iter().find(|addr| addr.is_ipv6()),
         None => Some(socket_addrs.first().unwrap()),
+    };
+
+    let ip = match ip {
+        Some(ip) => ip,
+        None => {
+            eprintln!("tcpping: connect: Network is unreachable");
+            return;
+        }
+    };
+
+    // Check if network connection is available
+    if let Err(e) = TcpStream::connect_timeout(ip, Duration::from_millis(100)) {
+        match e.kind() {
+            ErrorKind::ConnectionRefused | ErrorKind::AddrNotAvailable | ErrorKind::TimedOut => {
+                eprintln!("tcpping: connect: Network is unreachable");
+                return;
+            }
+            _ => {
+                eprintln!("tcpping: connect: {}", e);
+                return;
+            }
+        }
     }
-    .unwrap_or_else(|| {
-        eprintln!("tcpping: cannot resolve {}: Unknown host", host);
-        process::exit(1);
-    });
 
     let is_ipv6 = ip.is_ipv6();
     let ip_str = if is_ipv6 {
