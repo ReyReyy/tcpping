@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
+fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<IpAddr>) {
     let addr = format!("{}:{}", host, port);
     let socket_addrs: Vec<_> = match addr.to_socket_addrs() {
         Ok(addrs) => addrs.collect(),
@@ -17,21 +17,19 @@ fn tcp_ping(host: &str, port: u16, use_ipv4: bool, count: Option<u32>) {
     };
 
     if socket_addrs.is_empty() {
-        eprintln!("{}", host);
+        eprintln!("tcpping: cannot resolve {}: Unknown host", host);
         return;
     }
 
-    let ip = if use_ipv4 {
-        socket_addrs
-            .iter()
-            .find(|a| a.is_ipv4())
-            .unwrap_or_else(|| &socket_addrs[0])
-    } else {
-        socket_addrs
-            .iter()
-            .find(|a| a.is_ipv6())
-            .unwrap_or(&socket_addrs[0])
-    };
+    let ip = match force_ip_version {
+        Some(IpAddr::V4(_)) => socket_addrs.iter().find(|addr| addr.is_ipv4()),
+        Some(IpAddr::V6(_)) => socket_addrs.iter().find(|addr| addr.is_ipv6()),
+        None => Some(socket_addrs.first().unwrap()),
+    }
+    .unwrap_or_else(|| {
+        eprintln!("tcpping: cannot resolve {}: Unknown host", host);
+        process::exit(1);
+    });
 
     let is_ipv6 = ip.is_ipv6();
     let ip_str = if is_ipv6 {
@@ -148,8 +146,8 @@ fn main() {
 
     let host = &args[1];
     let mut port = 80;
-    let mut use_ipv4 = false;
     let mut count = None;
+    let mut force_ip_version = None;
 
     let mut i = 2;
     while i < args.len() {
@@ -158,17 +156,17 @@ fn main() {
                 port = args[i + 1].parse().unwrap_or(80);
                 i += 2;
             }
-            "-4" | "--IPv4" => {
-                use_ipv4 = true;
-                i += 1;
-            }
-            "-6" | "--IPv6" => {
-                use_ipv4 = false;
-                i += 1;
-            }
             "-c" | "--count" => {
                 count = Some(args[i + 1].parse().unwrap_or(0));
                 i += 2;
+            }
+            "-4" | "--ipv4" => {
+                force_ip_version = Some(IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED));
+                i += 1;
+            }
+            "-6" | "--ipv6" => {
+                force_ip_version = Some(IpAddr::V6(std::net::Ipv6Addr::UNSPECIFIED));
+                i += 1;
             }
             _ => {
                 eprintln!("Unknown option: {}", args[i]);
@@ -177,5 +175,5 @@ fn main() {
         }
     }
 
-    tcp_ping(host, port, use_ipv4, count);
+    tcp_ping(host, port, count, force_ip_version);
 }
