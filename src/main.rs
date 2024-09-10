@@ -6,18 +6,24 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<IpAddr>) {
+fn tcp_ping(
+    program_name: &str,
+    host: &str,
+    port: u16,
+    count: Option<u32>,
+    force_ip_version: Option<IpAddr>,
+) {
     let addr = format!("{}:{}", host, port);
     let socket_addrs: Vec<_> = match addr.to_socket_addrs() {
         Ok(addrs) => addrs.collect(),
         Err(_) => {
-            eprintln!("tcpping: {}: Name or service not known", host);
+            eprintln!("{}: {}: Name or service not known", program_name, host);
             return;
         }
     };
 
     if socket_addrs.is_empty() {
-        eprintln!("tcpping: {}: Name or service not known", host);
+        eprintln!("{}: {}: Name or service not known", program_name, host);
         return;
     }
 
@@ -31,8 +37,8 @@ fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<
         Some(ip) => ip,
         None => {
             eprintln!(
-                "tcpping: {}: Address family for hostname not supported",
-                host
+                "{}: {}: Address family for hostname not supported",
+                program_name, host
             );
             return;
         }
@@ -40,7 +46,7 @@ fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<
 
     // Check if network connection is available
     if let Err(_) = TcpStream::connect_timeout(ip, Duration::from_millis(100)) {
-        eprintln!("tcpping: connect: Network is unreachable");
+        eprintln!("{}: connect: Network is unreachable", program_name);
         return;
     }
 
@@ -131,6 +137,8 @@ fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    let program_name = args[0].split('/').last().unwrap_or(&args[0]);
+
     match args.get(1).map(|s| s.as_str()) {
         Some("-v") | Some("--version") => {
             let version = env!("CARGO_PKG_VERSION");
@@ -188,5 +196,5 @@ fn main() {
         }
     }
 
-    tcp_ping(host, port, count, force_ip_version);
+    tcp_ping(&program_name, host, port, count, force_ip_version);
 }
