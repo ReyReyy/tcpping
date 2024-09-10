@@ -2,6 +2,12 @@
 
 set -e
 
+# Check if this is an upgrade
+IS_UPGRADE=false
+if [ "$1" = "--upgrade" ]; then
+    IS_UPGRADE=true
+fi
+
 # Check if the user is root or using sudo
 if [ "$EUID" -ne 0 ]; then
     echo "Please use sudo or run as root"
@@ -81,7 +87,12 @@ sudo chmod +x /usr/local/bin/tcpping
 cd /
 rm -rf "$TEMP_DIR"
 
-echo "tcpping has been installed successfully"
+# Print success message
+if [ "$IS_UPGRADE" = true ]; then
+    echo "tcpping has been upgraded successfully"
+else
+    echo "tcpping has been installed successfully"
+fi
 
 # Check if tcpping is installed correctly
 tcpping --version
