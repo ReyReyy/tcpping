@@ -66,6 +66,30 @@ fn is_installed() -> bool {
     Path::new("/usr/local/bin/tcpping").exists()
 }
 
+fn install() {
+    println!("Installing tcpping...");
+    let status = Command::new("sudo")
+        .arg("cp")
+        .arg(env::current_exe().expect("Unable to get current executable path"))
+        .arg("/usr/local/bin/tcpping")
+        .status();
+
+    match status {
+        Ok(exit_status) if exit_status.success() => {
+            println!("tcpping installed successfully");
+            process::exit(0);
+        }
+        Ok(_) => {
+            eprintln!("Faild to install tcpping");
+            process::exit(1);
+        }
+        Err(e) => {
+            eprintln!("An error occurred while installing tcpping: {}", e);
+            process::exit(1);
+        }
+    }
+}
+
 fn tcp_ping(
     program_name: &str,
     host: &str,
@@ -256,10 +280,23 @@ fn main() {
             process::exit(0);
         }
         Some("-h") | Some("--help") => {
-            eprintln!(
-                "Usage: {} <host> [--port <port>] [--IPv4 | --IPv6] [--count <count>] [--upgrade]",
-                program_name
-            );
+            println!("  ");
+            println!("Usage:");
+            eprintln!("  {} [options] <destination>", program_name);
+            println!("  ");
+            println!("Options:");
+            println!("  -p <port>\t\tAdd port.");
+            println!("  -4\t\t\tForce IPv4.");
+            println!("  -6\t\t\tForce IPv6.");
+            println!("  -c <count>\t\tTest <count> times, 0 is unlimited.");
+            println!("  -v\t\t\tShow version.");
+            println!("  -h\t\t\tShow help.");
+            println!("  ");
+            println!("Version options:");
+            println!("  --upgrade\t\tUpgrade tcpping.");
+            println!("  --install\t\tInstall tcpping.");
+            println!("  --reinstall\t\tReinstall tcpping.");
+            println!("  --uninstall\t\tUninstall tcpping.");
             process::exit(0);
         }
         Some("--upgrade") => {
@@ -324,27 +361,10 @@ fn main() {
                 process::exit(1);
             }
 
-            println!("Installing tcpping...");
-            let status = Command::new("sudo")
-                .arg("cp")
-                .arg(env::current_exe().expect("Unable to get current executable path"))
-                .arg("/usr/local/bin/tcpping")
-                .status();
-
-            match status {
-                Ok(exit_status) if exit_status.success() => {
-                    println!("tcpping installed successfully");
-                    process::exit(0);
-                }
-                Ok(_) => {
-                    eprintln!("Faild to install tcpping");
-                    process::exit(1);
-                }
-                Err(e) => {
-                    eprintln!("An error occurred while installing tcpping: {}", e);
-                    process::exit(1);
-                }
-            }
+            install();
+        }
+        Some("--reinstall") => {
+            install();
         }
         Some("--uninstall") => {
             if !is_installed() {
