@@ -1,5 +1,4 @@
 use std::env;
-use std::io::ErrorKind;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::process;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -11,14 +10,14 @@ fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<
     let addr = format!("{}:{}", host, port);
     let socket_addrs: Vec<_> = match addr.to_socket_addrs() {
         Ok(addrs) => addrs.collect(),
-        Err(e) => {
-            eprintln!("{}", e);
+        Err(_) => {
+            eprintln!("tcpping: {}: Name or service not known", host);
             return;
         }
     };
 
     if socket_addrs.is_empty() {
-        eprintln!("tcpping: cannot resolve {}: Unknown host", host);
+        eprintln!("tcpping: {}: Name or service not known", host);
         return;
     }
 
@@ -31,23 +30,18 @@ fn tcp_ping(host: &str, port: u16, count: Option<u32>, force_ip_version: Option<
     let ip = match ip {
         Some(ip) => ip,
         None => {
-            eprintln!("tcpping: connect: Network is unreachable");
+            eprintln!(
+                "tcpping: {}: Address family for hostname not supported",
+                host
+            );
             return;
         }
     };
 
     // Check if network connection is available
-    if let Err(e) = TcpStream::connect_timeout(ip, Duration::from_millis(100)) {
-        match e.kind() {
-            ErrorKind::ConnectionRefused | ErrorKind::AddrNotAvailable | ErrorKind::TimedOut => {
-                eprintln!("tcpping: connect: Network is unreachable");
-                return;
-            }
-            _ => {
-                eprintln!("tcpping: connect: {}", e);
-                return;
-            }
-        }
+    if let Err(_) = TcpStream::connect_timeout(ip, Duration::from_millis(100)) {
+        eprintln!("tcpping: connect: Network is unreachable");
+        return;
     }
 
     let is_ipv6 = ip.is_ipv6();
