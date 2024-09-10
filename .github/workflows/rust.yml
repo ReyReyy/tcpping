@@ -82,6 +82,7 @@ jobs:
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             sudo apt-get update
             sudo apt-get install -y gcc-aarch64-linux-gnu
+            sudo apt-get install -y libssl-dev:arm64
           fi
         shell: bash
 
@@ -89,6 +90,10 @@ jobs:
         run: |
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+            export PKG_CONFIG_ALLOW_CROSS=1
+            export OPENSSL_DIR=/usr/aarch64-linux-gnu
+            export OPENSSL_LIB_DIR=/usr/aarch64-linux-gnu/lib
+            export OPENSSL_INCLUDE_DIR=/usr/aarch64-linux-gnu/include
             cargo build --release --target ${{ matrix.target }}
           else
             cargo build --release --target ${{ matrix.target }}
