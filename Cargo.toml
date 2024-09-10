@@ -1,6 +1,6 @@
 [package]
 name = "tcpping"
-version = "0.1.6-beta.5"
+version = "0.1.6-beta.6"
 edition = "2021"
 
 [dependencies]
