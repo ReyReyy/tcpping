@@ -10,7 +10,7 @@ fi
 
 # Check if the user is root or using sudo
 if [ "$EUID" -ne 0 ]; then
-    echo "Please use sudo or run as root"
+    echo "Please use sudo or run as root."
     exit 1
 fi
 
@@ -27,7 +27,7 @@ case $ARCH in
         ARCH="aarch64"
         ;;
     *)
-        echo "Unsupported architecture: $ARCH" 
+        echo "Unsupported architecture: $ARCH."
         exit 1
         ;;
 esac
@@ -41,7 +41,7 @@ fi
 LATEST_VERSION=$(curl -s https://api.github.com/repos/ReyReyy/tcpping/releases/latest | sed -n 's/.*"tag_name": "\(.*\)".*/\1/p')
 
 if [ -z "$LATEST_VERSION" ]; then
-    echo "Failed to get latest version number"
+    echo "Failed to get latest version number."
     exit 1
 fi
 
@@ -54,28 +54,28 @@ cd "$TEMP_DIR"
 
 # Download file
 if ! curl -L -s -o tcpping.tar.gz "$DOWNLOAD_URL"; then
-    echo "Download failed"
+    echo "Download failed."
     rm -rf "$TEMP_DIR"
     exit 1
 fi
 
 # Unzip file
 if ! tar -xzf tcpping.tar.gz; then
-    echo "Unzip failed"
+    echo "Unzip failed."
     rm -rf "$TEMP_DIR"
     exit 1
 fi
 
 # Check if the file exists
 if [ ! -f tcpping ]; then
-    echo "tcpping file does not exist"
+    echo "tcpping file does not exist."
     rm -rf "$TEMP_DIR"
     exit 1
 fi
 
 # Move executable file to /usr/local/bin/
 if ! sudo mv tcpping /usr/local/bin/; then
-    echo "Move file failed"
+    echo "Move file failed."
     rm -rf "$TEMP_DIR"
     exit 1
 fi
@@ -89,9 +89,9 @@ rm -rf "$TEMP_DIR"
 
 # Print success message
 if [ "$IS_UPGRADE" = true ]; then
-    echo "tcpping has been upgraded successfully"
+    echo "tcpping has been upgraded successfully!"
 else
-    echo "tcpping has been installed successfully"
+    echo "tcpping has been installed successfully!"
 fi
 
 # Check if tcpping is installed correctly
