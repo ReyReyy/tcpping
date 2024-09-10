@@ -137,7 +137,7 @@ fn tcp_ping(
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let program_name = args[0].split('/').last().unwrap_or(&args[0]);
+    let program_name = args[0].clone(); // 使用完整的程序路径
 
     match args.get(1).map(|s| s.as_str()) {
         Some("-v") | Some("--version") => {
@@ -150,7 +150,7 @@ fn main() {
         Some("-h") | Some("--help") => {
             eprintln!(
                 "Usage: {} <host> [--port <port>] [--IPv4 | --IPv6] [--count <count>]",
-                args[0]
+                program_name
             );
             process::exit(0);
         }
@@ -160,7 +160,7 @@ fn main() {
     if args.len() < 2 {
         eprintln!(
             "Usage: {} <host> [--port <port>] [--IPv4 | --IPv6] [--count <count>]",
-            args[0]
+            program_name
         );
         process::exit(1);
     }
