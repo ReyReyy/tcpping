@@ -15,18 +15,18 @@ Ctrl + C 停止。
 ## 子命令
 
 ```
-[-p | --port] <port>               添加端口
-[-4 | --IPv4]                      强制使用 IPv4
-[-6 | --IPv6]                      强制使用 IPv6
-[-c | --count] <count>             测试 <count> 次，0 是不限制次数
-[-v | --version]                   显示版本
-[-h | --help]                      显示帮助
+-p <port>               指定端口
+-4                      使用 IPv4
+-6                      使用 IPv6
+-c <count>              执行 <count> 次后停止
+-v                      显示版本
+-h                      显示帮助
 ```
 
 默认:
 
 - 端口: 80
-- IP 版本: IPv6
+- IP 版本: 系统默认 IP 优先级
 - 次数: 0（无限）
 
 ## 如何安装

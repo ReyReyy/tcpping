@@ -15,18 +15,18 @@ Ctrl + C to stop.
 ## Subcommands
 
 ```
-[-p | --port] <port>               Add port.
-[-4 | --IPv4]                      Force IPv4.
-[-6 | --IPv6]                      Force IPv6.
-[-c | --count] <count>             Test <count> times, 0 is unlimited.
-[-v | --version]                   Show version.
-[-h | --help]                      Show help.
+-p <port>		          specify port
+-4			              use IPv4
+-6			              use IPv6
+-c <count>		        stop after <count> replies
+-v			              show version
+-h			              show help
 ```
 
 Default:
 
 - Port: 80
-- IP Version: IPv6
+- IP Version: Depends on system.
 - Count: 0 (Unlimited)
 
 ## How to Install
