@@ -158,8 +158,8 @@ fn main() {
             println!("  -4\t\t\tuse IPv4");
             println!("  -6\t\t\tuse IPv6");
             println!("  -c <count>\t\tstop after <count> replies");
-            println!("  -v\t\t\tshow version.");
-            println!("  -h\t\t\tshow help.");
+            println!("  -v\t\t\tshow version");
+            println!("  -h\t\t\tshow help");
             println!("  ");
             process::exit(0);
         }
