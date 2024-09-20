@@ -1,94 +1,10 @@
-use semver::Version;
-use serde_json::Value;
 use std::env;
-use std::fs::File;
-use std::io::Write;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
-use std::path::Path;
-use std::process::{self, Command};
+use std::process::{self};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
-
-fn get_latest_version(
-    include_prerelease: bool,
-) -> Result<(String, bool), Box<dyn std::error::Error>> {
-    let url = "https://api.github.com/repos/ReyReyy/tcpping/releases";
-    let client = reqwest::blocking::Client::new();
-    let response = client
-        .get(url)
-        .header("User-Agent", "tcpping-updater")
-        .send()?;
-
-    if !response.status().is_success() {
-        return Err(format!("Faild to request API {}", response.status()).into());
-    }
-
-    let releases: Vec<Value> = response.json()?;
-    if releases.is_empty() {
-        return Err("Unable to find any versions".into());
-    }
-
-    let latest_release = releases
-        .into_iter()
-        .filter(|release| include_prerelease || !release["prerelease"].as_bool().unwrap_or(false))
-        .max_by(|a, b| {
-            let a_version = Version::parse(
-                a["tag_name"]
-                    .as_str()
-                    .unwrap_or("0.0.0")
-                    .trim_start_matches('v'),
-            )
-            .unwrap_or_else(|_| Version::new(0, 0, 0));
-            let b_version = Version::parse(
-                b["tag_name"]
-                    .as_str()
-                    .unwrap_or("0.0.0")
-                    .trim_start_matches('v'),
-            )
-            .unwrap_or_else(|_| Version::new(0, 0, 0));
-            a_version.cmp(&b_version)
-        })
-        .ok_or("Unable to find the fitting version")?;
-
-    let latest_version = latest_release["tag_name"]
-        .as_str()
-        .ok_or("Unable to resolve version tags")?
-        .trim_start_matches('v')
-        .to_string();
-    let is_prerelease = latest_release["prerelease"].as_bool().unwrap_or(false);
-
-    Ok((latest_version, is_prerelease))
-}
-
-fn is_installed() -> bool {
-    Path::new("/usr/local/bin/tcpping").exists()
-}
-
-fn install() {
-    println!("Installing tcpping...");
-    let status = Command::new("sudo")
-        .arg("cp")
-        .arg(env::current_exe().expect("Unable to get current executable path"))
-        .arg("/usr/local/bin/tcpping")
-        .status();
-
-    match status {
-        Ok(exit_status) if exit_status.success() => {
-            println!("tcpping installed successfully");
-            process::exit(0);
-        }
-        Ok(_) => {
-            eprintln!("Faild to install tcpping");
-            process::exit(1);
-        }
-        Err(e) => {
-            eprintln!("An error occurred while installing tcpping: {}", e);
-            process::exit(1);
-        }
-    }
-}
 
 fn tcp_ping(
     program_name: &str,
@@ -219,33 +135,6 @@ fn tcp_ping(
     }
 }
 
-fn perform_upgrade() -> Result<(), Box<dyn std::error::Error>> {
-    // println!("Downloading installation script...");
-
-    let install_script_url =
-        "https://raw.githubusercontent.com/ReyReyy/tcpping/master/shell/install.sh";
-    let response = reqwest::blocking::get(install_script_url)?;
-    let script_content = response.text()?;
-
-    let temp_script_path = "/tmp/tcpping_install.sh";
-    let mut file = File::create(temp_script_path)?;
-    file.write_all(script_content.as_bytes())?;
-
-    // println!("Running installation script...");
-
-    let status = Command::new("sudo")
-        .arg("bash")
-        .arg(temp_script_path)
-        .arg("--upgrade")
-        .status()?;
-
-    if status.success() {
-        Ok(())
-    } else {
-        Err("Faild to upgrade".into())
-    }
-}
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     let program_name = args[0].clone();
@@ -256,27 +145,6 @@ fn main() {
             let arch = std::env::consts::ARCH;
             let os = std::env::consts::OS;
             println!("tcpping version {} ({}/{})", current_version, os, arch);
-
-            let current_is_prerelease = current_version.contains("-");
-            match get_latest_version(current_is_prerelease) {
-                Ok((latest_version, is_prerelease)) => {
-                    // println!("Latest version: {}", latest_version);
-                    if let (Ok(current), Ok(latest)) = (
-                        Version::parse(current_version),
-                        Version::parse(&latest_version),
-                    ) {
-                        if latest > current || (current_is_prerelease && !is_prerelease) {
-                            println!(
-                                "New version: {}. Run '{} --upgrade' to upgrade",
-                                latest_version, program_name
-                            );
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Unable to get latest version: {}", e);
-                }
-            }
             process::exit(0);
         }
         Some("-h") | Some("--help") => {
@@ -299,106 +167,12 @@ fn main() {
             println!("  --uninstall\t\tUninstall tcpping.");
             process::exit(0);
         }
-        Some("--upgrade") => {
-            if !is_installed() {
-                eprintln!(
-                    "tcpping not installed. Please run '{} --install' first.",
-                    program_name
-                );
-                process::exit(1);
-            }
-
-            let current_version = env!("CARGO_PKG_VERSION");
-            // println!("Current version: {}", current_version);
-
-            let current_is_prerelease = current_version.contains("-");
-            match get_latest_version(current_is_prerelease) {
-                Ok((latest_version, is_prerelease)) => {
-                    // println!("Latest version: {}", latest_version);
-
-                    if let (Ok(current), Ok(latest)) = (
-                        Version::parse(current_version),
-                        Version::parse(&latest_version),
-                    ) {
-                        if latest > current || (current_is_prerelease && !is_prerelease) {
-                            println!("New version: {}, upgrading...", latest_version);
-                            match perform_upgrade() {
-                                Ok(_) => {
-                                    // println!("Upgrade completed");
-                                    process::exit(0);
-                                }
-                                Err(e) => {
-                                    eprintln!("Faild to upgrade: {}", e);
-                                    process::exit(1);
-                                }
-                            }
-                        } else {
-                            println!("Current version is the latest.");
-                            process::exit(0);
-                        }
-                    } else {
-                        eprintln!("Version parsing error.");
-                        process::exit(1);
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Unable to get latest version: {}.", e);
-                    println!("Continue upgrade? (y/N)");
-                    let mut input = String::new();
-                    std::io::stdin()
-                        .read_line(&mut input)
-                        .expect("Failed to read input");
-                    if input.trim().to_lowercase() != "y" {
-                        println!("Upgrade cancelled.");
-                        process::exit(0);
-                    }
-                }
-            }
-        }
-        Some("--install") => {
-            if is_installed() {
-                eprintln!("tcpping is already installed. No need to install again.");
-                process::exit(1);
-            }
-
-            install();
-        }
-        Some("--reinstall") => {
-            install();
-        }
-        Some("--uninstall") => {
-            if !is_installed() {
-                eprintln!("tcpping is not installed. No need to uninstall.");
-                process::exit(1);
-            }
-
-            println!("Uninstalling tcpping...");
-            match Command::new("sudo")
-                .arg("rm")
-                .arg("-f")
-                .arg("/usr/local/bin/tcpping")
-                .status()
-            {
-                Ok(status) if status.success() => {
-                    println!("tcpping uninstalled successfully");
-                    process::exit(0);
-                }
-                Ok(_) => {
-                    eprintln!("Faild to uninstall tcpping");
-                    process::exit(1);
-                }
-                Err(e) => {
-                    eprintln!("An error occurred while uninstalling tcpping: {}", e);
-                    process::exit(1);
-                }
-            }
-        }
         _ => {}
     }
 
     if args.len() < 2 {
         eprintln!(
-            "Usage: {} <host> [--port <port>] [--IPv4 | --IPv6] [--count <count>]",
+            "{}: usage error: Destination address required",
             program_name
         );
         process::exit(1);
