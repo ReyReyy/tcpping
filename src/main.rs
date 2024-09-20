@@ -153,18 +153,14 @@ fn main() {
             eprintln!("  {} [options] <destination>", program_name);
             println!("  ");
             println!("Options:");
-            println!("  -p <port>\t\tAdd port.");
-            println!("  -4\t\t\tForce IPv4.");
-            println!("  -6\t\t\tForce IPv6.");
-            println!("  -c <count>\t\tTest <count> times, 0 is unlimited.");
-            println!("  -v\t\t\tShow version.");
-            println!("  -h\t\t\tShow help.");
+            println!("  <destination>\t\tDNS name or IP address");
+            println!("  -p <port>\t\tspecify port");
+            println!("  -4\t\t\tuse IPv4");
+            println!("  -6\t\t\tuse IPv6");
+            println!("  -c <count>\t\tstop after <count> replies");
+            println!("  -v\t\t\tshow version.");
+            println!("  -h\t\t\tshow help.");
             println!("  ");
-            println!("Version options:");
-            println!("  --upgrade\t\tUpgrade tcpping.");
-            println!("  --install\t\tInstall tcpping.");
-            println!("  --reinstall\t\tReinstall tcpping.");
-            println!("  --uninstall\t\tUninstall tcpping.");
             process::exit(0);
         }
         _ => {}
