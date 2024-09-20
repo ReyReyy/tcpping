@@ -96,3 +96,5 @@ round-trip min/avg/max/stddev = 3.272/3.675/4.080/0.359 ms
 感谢 [cursor IDE](https://www.cursor.com/)<br>
 这个项目 90% 是由 cursor IDE 生成的<br>
 其实我完全不会写 rust 代码 :P<br>
+
+~~呜呜呜！cursor IDE 试用时间结束了！没 AI 用了！(;´༎ຶД༎ຶ`)~~
