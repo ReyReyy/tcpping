@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: ""
+        description: "v0.1.6"
         required: true
 
 jobs:
