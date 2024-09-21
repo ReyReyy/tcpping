@@ -7,12 +7,12 @@
 ## 用法
 
 ```
-tcpping <IP 地址> [子命令]
+tcpping [选项] <目标 IP/Host>
 ```
 
 Ctrl + C 停止。
 
-## 子命令
+## 选项
 
 ```
 -p <port>               指定端口

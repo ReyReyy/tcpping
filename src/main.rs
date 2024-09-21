@@ -1,6 +1,6 @@
 use std::env;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
-use std::process::{self};
+use std::process;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;

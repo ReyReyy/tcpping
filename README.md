@@ -7,12 +7,12 @@ Testing server latency like command "ping", but with tcp!
 ## Usage
 
 ```
-tcpping <IP Address> [SUBCOMMAND]
+tcpping [options] <destination>
 ```
 
 Ctrl + C to stop.
 
-## Subcommands
+## Options
 
 ```
 -p <port>		          specify port
