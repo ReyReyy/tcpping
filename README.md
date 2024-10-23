@@ -15,10 +15,10 @@ Ctrl + C to stop.
 ## Options
 
 ```
--p <port>		          specify port
+-p <port>		              specify port
 -4			              use IPv4
 -6			              use IPv6
--c <count>		        stop after <count> replies
+-c <count>		              stop after <count> replies
 -v			              show version
 -h			              show help
 ```
