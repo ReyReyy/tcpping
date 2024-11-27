@@ -45,10 +45,10 @@ fn tcp_ping(
     };
 
     // Check if network connection is available
-    if let Err(_) = TcpStream::connect_timeout(ip, Duration::from_millis(100)) {
-        eprintln!("{}: connect: Network is unreachable", program_name);
-        return;
-    }
+    // if let Err(_) = TcpStream::connect_timeout(ip, Duration::from_millis(100)) {
+    //     eprintln!("{}: connect: Network is unreachable", program_name);
+    //     return;
+    // }
 
     let is_ipv6 = ip.is_ipv6();
     let ip_str = if is_ipv6 {
