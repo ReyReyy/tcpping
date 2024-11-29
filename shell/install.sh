@@ -73,6 +73,11 @@ if [ ! -f tcpping ]; then
     exit 1
 fi
 
+# Check if /usr/local/bin directory exists, create if not
+if [ ! -d /usr/local/bin ]; then
+    sudo mkdir -p /usr/local/bin
+fi
+
 # Move executable file to /usr/local/bin/
 if ! sudo mv tcpping /usr/local/bin/; then
     echo "Move file failed."
