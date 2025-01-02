@@ -6,6 +6,47 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
+fn show_help(program_name: &str) {
+    println!("  ");
+    println!("Usage:");
+    println!("  {} [options] <destination[:port]>", program_name);
+    println!("  ");
+    println!("Options:");
+    println!("  <destination>        DNS name or IP address");
+    println!("  -p <port>            specify port (override port in destination)");
+    println!("  -4                   use IPv4");
+    println!("  -6                   use IPv6");
+    println!("  -c <count>           stop after <count> replies");
+    println!("  -v                   show version");
+    println!("  -h                   show help");
+    println!("  ");
+}
+
+// Added: resolves destination address and port
+fn parse_destination(dest: &str) -> (String, Option<u16>) {
+    // Special cases for handling IPv6 addresses
+    if dest.starts_with('[') {
+        if let Some(end_bracket) = dest.find(']') {
+            let ipv6 = &dest[1..end_bracket];
+            if dest.len() > end_bracket + 1 && dest.chars().nth(end_bracket + 1) == Some(':') {
+                if let Ok(port) = dest[end_bracket + 2..].parse::<u16>() {
+                    return (ipv6.to_string(), Some(port));
+                }
+            }
+            return (ipv6.to_string(), None);
+        }
+    }
+
+    // Handling Common Addresses (IPv4 or Domain Names)
+    if let Some(colon_idx) = dest.rfind(':') {
+        if let Ok(port) = dest[colon_idx + 1..].parse::<u16>() {
+            return (dest[..colon_idx].to_string(), Some(port));
+        }
+    }
+
+    (dest.to_string(), None)
+}
+
 fn tcp_ping(
     program_name: &str,
     host: &str,
@@ -51,7 +92,6 @@ fn tcp_ping(
         ip.ip().to_string()
     };
 
-    // Check if host is an IP address
     let host_is_ip = host.parse::<IpAddr>().is_ok();
 
     if host_is_ip {
@@ -106,7 +146,6 @@ fn tcp_ping(
         thread::sleep(Duration::from_secs(1));
     }
 
-    // Show statistical information
     if !delays.is_empty() {
         let loss_rate = (packets_sent - packets_received) as f64 / packets_sent as f64 * 100.0;
         println!("\n--- {} tcp ping statistics ---", host);
@@ -133,6 +172,11 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let program_name = args[0].clone();
 
+    if args.len() == 1 {
+        show_help(&program_name);
+        process::exit(0);
+    }
+
     match args.get(1).map(|s| s.as_str()) {
         Some("-v") | Some("--version") => {
             let current_version = env!("CARGO_PKG_VERSION");
@@ -142,34 +186,15 @@ fn main() {
             process::exit(0);
         }
         Some("-h") | Some("--help") => {
-            println!("  ");
-            println!("Usage:");
-            eprintln!("  {} [options] <destination>", program_name);
-            println!("  ");
-            println!("Options:");
-            println!("  <destination>\t\tDNS name or IP address");
-            println!("  -p <port>\t\tspecify port");
-            println!("  -4\t\t\tuse IPv4");
-            println!("  -6\t\t\tuse IPv6");
-            println!("  -c <count>\t\tstop after <count> replies");
-            println!("  -v\t\t\tshow version");
-            println!("  -h\t\t\tshow help");
-            println!("  ");
+            show_help(&program_name);
             process::exit(0);
         }
         _ => {}
     }
 
-    if args.len() < 2 {
-        eprintln!(
-            "{}: usage error: Destination address required",
-            program_name
-        );
-        process::exit(1);
-    }
-
-    let host = &args[1];
-    let mut port = 80;
+    // Parse the destination address and possible ports
+    let (host, host_port) = parse_destination(&args[1]);
+    let mut port = host_port.unwrap_or(80); // 80 is used by default
     let mut count = None;
     let mut force_ip_version = None;
 
@@ -177,12 +202,23 @@ fn main() {
     while i < args.len() {
         match args[i].as_str() {
             "-p" | "--port" => {
-                port = args[i + 1].parse().unwrap_or(80);
-                i += 2;
+                if i + 1 < args.len() {
+                    // -p parameter takes precedence over the port in the address
+                    port = args[i + 1].parse().unwrap_or(port);
+                    i += 2;
+                } else {
+                    eprintln!("Error: Port number required after -p");
+                    process::exit(1);
+                }
             }
             "-c" | "--count" => {
-                count = Some(args[i + 1].parse().unwrap_or(0));
-                i += 2;
+                if i + 1 < args.len() {
+                    count = Some(args[i + 1].parse().unwrap_or(0));
+                    i += 2;
+                } else {
+                    eprintln!("Error: Count number required after -c");
+                    process::exit(1);
+                }
             }
             "-4" | "--ipv4" => {
                 force_ip_version = Some(IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED));
@@ -199,5 +235,5 @@ fn main() {
         }
     }
 
-    tcp_ping(&program_name, host, port, count, force_ip_version);
+    tcp_ping(&program_name, &host, port, count, force_ip_version);
 }
