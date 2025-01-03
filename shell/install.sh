@@ -2,10 +2,19 @@
 
 set -e
 
-# Check if this is an upgrade
-IS_UPGRADE=false
-if [ "$1" = "--upgrade" ]; then
-    IS_UPGRADE=true
+# Store the script path for later deletion
+SCRIPT_PATH=$(readlink -f "$0")
+
+# Function to extract version number from tcpping --version output
+get_version() {
+    tcpping --version 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+'
+}
+
+# Check current installation and version
+CURRENT_VERSION=""
+OPERATION="installed"
+if tcpping --version >/dev/null 2>&1; then
+    CURRENT_VERSION=$(get_version)
 fi
 
 # Check if the user is root or using sudo
@@ -92,15 +101,23 @@ sudo chmod +x /usr/local/bin/tcpping
 cd /
 rm -rf "$TEMP_DIR"
 
-# Print success message
-if [ "$IS_UPGRADE" = true ]; then
-    echo "tcpping has been upgraded successfully!"
-else
-    echo "tcpping has been installed successfully!"
+# Verify installation and determine operation type
+NEW_VERSION=$(get_version)
+if [ -z "$NEW_VERSION" ]; then
+    echo "Installation failed: tcpping is not working properly."
+    exit 1
 fi
 
-# Check if tcpping is installed correctly
+if [ -n "$CURRENT_VERSION" ]; then
+    if [ "$CURRENT_VERSION" = "$NEW_VERSION" ]; then
+        OPERATION="reinstalled"
+    else
+        OPERATION="upgraded"
+    fi
+fi
+
+echo "tcpping has been ${OPERATION} successfully!"
 tcpping --version
 
 # Delete script itself
-rm -f "$0"
+rm -f "$SCRIPT_PATH"
