@@ -2,11 +2,8 @@
 
 set -e
 
-# Check if this is an upgrade
-IS_UPGRADE=false
-if [ "$1" = "--upgrade" ]; then
-    IS_UPGRADE=true
-fi
+# Store the script path for later deletion
+SCRIPT_PATH=$(readlink -f "$0")
 
 # Check if the user is root or using sudo
 if [ "$EUID" -ne 0 ]; then
@@ -92,15 +89,14 @@ sudo chmod +x /usr/local/bin/tcpping
 cd /
 rm -rf "$TEMP_DIR"
 
-# Print success message
-if [ "$IS_UPGRADE" = true ]; then
-    echo "tcpping has been upgraded successfully!"
-else
+# Verify installation & Print result
+if tcpping --version >/dev/null 2>&1; then
     echo "tcpping has been installed successfully!"
+    tcpping --version
+else
+    echo "Installation failed: tcpping is not working properly."
+    exit 1
 fi
 
-# Check if tcpping is installed correctly
-tcpping --version
-
 # Delete script itself
-rm -f "$0"
+rm -f "$SCRIPT_PATH"
