@@ -2,9 +2,6 @@
 
 set -e
 
-# Store the script path for later deletion
-SCRIPT_PATH=$(readlink -f "$0")
-
 # Check if the user is root or using sudo
 if [ "$EUID" -ne 0 ]; then
     echo "Please use sudo or run as root."
@@ -97,6 +94,3 @@ else
     echo "Installation failed: tcpping is not working properly."
     exit 1
 fi
-
-# Delete script itself
-rm -f "$SCRIPT_PATH"
