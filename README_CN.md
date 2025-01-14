@@ -7,20 +7,21 @@
 ## 用法
 
 ```
-tcpping [选项] <目标 IP/Host>
+tcpping [选项] <目标 IP/域名 [:端口]>
 ```
 
-Ctrl + C 停止。
+Ctrl + C 停止
 
 ## 选项
 
 ```
--p <port>               指定端口
--4                      使用 IPv4
--6                      使用 IPv6
--c <count>              执行 <count> 次后停止
--v                      显示版本
--h                      显示帮助
+<目标 IP/域名>
+-p <port>            指定端口（强制覆盖目标端口）
+-4                   使用 IPv4
+-6                   使用 IPv6
+-c <count>           执行 <count> 次后停止
+-v                   显示版本
+-h                   显示帮助
 ```
 
 默认:
@@ -79,7 +80,7 @@ round-trip min/avg/max/stddev = 3.391/4.146/5.673/0.896 ms
 指定端口和 IP 版本：
 
 ```
-reyreyy@ReMac ~ % tcpping google.com -p 443 -4
+reyreyy@ReMac ~ % tcpping google.com:443 -4
 TCP PING google.com 142.250.77.14:443
 Connected to 142.250.77.14:443, tcp_seq=0 time=4.080 ms
 Connected to 142.250.77.14:443, tcp_seq=1 time=3.981 ms
@@ -94,7 +95,6 @@ round-trip min/avg/max/stddev = 3.272/3.675/4.080/0.359 ms
 ## 感谢
 
 感谢 [cursor IDE](https://www.cursor.com/)<br>
-这个项目 90% 是由 cursor IDE 生成的<br>
+这个项目 75% 是由 cursor IDE 生成的<br>
+剩下的 25% 是由各家 AI 辅助完成<br>
 其实我完全不会写 rust 代码 :P<br>
-
-~~呜呜呜！cursor IDE 试用时间结束了！没 AI 用了！(;´༎ຶД༎ຶ`)~~
