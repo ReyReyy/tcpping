@@ -79,7 +79,7 @@ jobs:
               ARCH="aarch64"
             fi
             EXT="zip"
-            7z a ../../../tcpping-${VERSION}-${OS}-${ARCH}.${EXT} tcpping.exe
+            7z a ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping.exe
           elif [[ "${{ matrix.target }}" == *"-apple-darwin" ]]; then
             OS="macos"
             if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
@@ -88,7 +88,7 @@ jobs:
               ARCH="aarch64"
             fi
             EXT="tar.gz"
-            tar czvf ../../../tcpping-${VERSION}-${OS}-${ARCH}.${EXT} tcpping
+            tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping
           else
             OS="linux"
             if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
@@ -97,7 +97,7 @@ jobs:
               ARCH="aarch64"
             fi
             EXT="tar.gz"
-            tar czvf ../../../tcpping-${VERSION}-${OS}-${ARCH}.${EXT} tcpping
+            tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping
           fi
           cd -
           ls -l tcpping-*
