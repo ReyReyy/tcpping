@@ -24,7 +24,12 @@ fn show_help(program_name: &str) {
 
 // Added: resolves destination address and port
 fn parse_destination(dest: &str) -> (String, Option<u16>) {
-    // Special cases for handling IPv6 addresses
+    // Try to parse as IPv6 first
+    if let Ok(ipv6) = dest.parse::<std::net::Ipv6Addr>() {
+        return (ipv6.to_string(), None);
+    }
+
+    // Handle bracketed IPv6 with optional port
     if dest.starts_with('[') {
         if let Some(end_bracket) = dest.find(']') {
             let ipv6 = &dest[1..end_bracket];
@@ -37,10 +42,13 @@ fn parse_destination(dest: &str) -> (String, Option<u16>) {
         }
     }
 
-    // Handling Common Addresses (IPv4 or Domain Names)
+    // Handle IPv4 or hostname with optional port
     if let Some(colon_idx) = dest.rfind(':') {
-        if let Ok(port) = dest[colon_idx + 1..].parse::<u16>() {
-            return (dest[..colon_idx].to_string(), Some(port));
+        // If there's only one colon, it might be a port separator
+        if dest.matches(':').count() == 1 {
+            if let Ok(port) = dest[colon_idx + 1..].parse::<u16>() {
+                return (dest[..colon_idx].to_string(), Some(port));
+            }
         }
     }
 
