@@ -112,6 +112,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Download artifacts
         uses: actions/download-artifact@v3
 
@@ -119,8 +122,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          gh release create ${GITHUB_REF} -t "tcpping ${VERSION}" --generate-notes
+          gh release create "${GITHUB_REF##*/}" -t "tcpping ${GITHUB_REF##*/v}" --generate-notes
           for asset in tcpping-*/tcpping-*; do
-            gh release upload ${GITHUB_REF} "$asset" --clobber
+            gh release upload "${GITHUB_REF##*/}" "$asset" --clobber
           done
