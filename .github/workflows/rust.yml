@@ -1,57 +1,12 @@
-name: Rust Cross Compile and Release
+name: Rust Release
 
 on:
   push:
-    branches:
-      - master
     tags:
       - "v*"
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "v0.1.6"
-        required: true
 
 jobs:
-  check_version_and_release:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.get_version.outputs.version }}
-      should_release: ${{ steps.check_version.outputs.should_release }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Get version
-        id: get_version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            VERSION=$(grep '^version =' Cargo.toml | sed 's/.*= *"//' | sed 's/".*//')
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Check if tag exists
-        id: check_version
-        run: |
-          if ! git ls-remote --exit-code --tags origin refs/tags/v${{ steps.get_version.outputs.version }} >/dev/null 2>&1; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create and push tag
-        if: steps.check_version.outputs.should_release == 'true'
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag -a v${{ steps.get_version.outputs.version }} -m "Release v${{ steps.get_version.outputs.version }}"
-          git push origin v${{ steps.get_version.outputs.version }}
-
   build:
-    needs: check_version_and_release
-    if: needs.check_version_and_release.outputs.should_release == 'true'
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -77,11 +32,9 @@ jobs:
             runner: macos-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.target }}
@@ -91,17 +44,6 @@ jobs:
         run: |
           rustup target add ${{ matrix.target }}
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            sudo dpkg --add-architecture arm64
-            sudo sed -i 's/^deb /deb [arch=amd64,i386] /' /etc/apt/sources.list
-            sudo tee /etc/apt/sources.list.d/arm64.list > /dev/null <<EOF
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy universe
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates universe
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy multiverse
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates multiverse
-          deb [arch=arm64] http://ports.ubuntu.com/ jammy-backports main restricted universe multiverse
-          EOF
             sudo apt-get update
             sudo apt-get install -y gcc-aarch64-linux-gnu
             sudo apt-get install -y libssl-dev:arm64
@@ -114,9 +56,6 @@ jobs:
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
             export PKG_CONFIG_ALLOW_CROSS=1
-            export OPENSSL_DIR=/usr/aarch64-linux-gnu
-            export OPENSSL_LIB_DIR=/usr/lib/aarch64-linux-gnu
-            export OPENSSL_INCLUDE_DIR=/usr/include/aarch64-linux-gnu
             cargo build --release --target ${{ matrix.target }}
           else
             cargo build --release --target ${{ matrix.target }}
@@ -126,38 +65,18 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          VERSION=${{ needs.check_version_and_release.outputs.version }}
+          VERSION=${GITHUB_REF#refs/tags/v}
           cd target/${{ matrix.target }}/release
           if [[ "${{ matrix.target }}" == *"-pc-windows-"* ]]; then
             OS="windows"
-            if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
-              ARCH="x86_64"
-            else
-              ARCH="aarch64"
-            fi
-            EXT="zip"
-            7z a ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping.exe
-          elif [[ "${{ matrix.target }}" == *"-apple-darwin" ]]; then
-            OS="macos"
-            if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
-              ARCH="x86_64"
-            else
-              ARCH="aarch64"
-            fi
-            EXT="tar.gz"
-            tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping
+            ARCH=$(echo "${{ matrix.target }}" | cut -d'-' -f1)
+            7z a ../../../tcpping-v${VERSION}-${OS}-${ARCH}.zip tcpping.exe
           else
-            OS="linux"
-            if [[ "${{ matrix.target }}" == "x86_64-"* ]]; then
-              ARCH="x86_64"
-            else
-              ARCH="aarch64"
-            fi
-            EXT="tar.gz"
-            tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.${EXT} tcpping
+            OS=$(if [[ "${{ matrix.target }}" == *"-apple-darwin" ]]; then echo "macos"; else echo "linux"; fi)
+            ARCH=$(echo "${{ matrix.target }}" | cut -d'-' -f1)
+            tar czvf ../../../tcpping-v${VERSION}-${OS}-${ARCH}.tar.gz tcpping
           fi
           cd -
-          ls -l tcpping-*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -166,36 +85,20 @@ jobs:
           path: tcpping-v*.*
 
   release:
-    needs: [check_version_and_release, build]
-    if: needs.check_version_and_release.outputs.should_release == 'true'
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ needs.check_version_and_release.outputs.version }}
-          release_name: tcpping v${{ needs.check_version_and_release.outputs.version }}
-          draft: false
-          prerelease: ${{ contains(needs.check_version_and_release.outputs.version, '-beta') }}
+      - uses: actions/checkout@v3
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
 
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Upload Release Assets
+      - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for asset in tcpping-*/tcpping-v*; do
-            asset_name=$(basename "$asset")
-            echo "Uploading $asset_name"
-            gh release upload v${{ needs.check_version_and_release.outputs.version }} "$asset" --clobber
-          done
+          VERSION=${GITHUB_REF#refs/tags/v}
+          gh release create ${GITHUB_REF} \
+            --title "tcpping ${GITHUB_REF}" \
+            --notes "Release ${GITHUB_REF}" \
+            tcpping-*/tcpping-v*
