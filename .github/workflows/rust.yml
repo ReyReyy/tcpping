@@ -122,7 +122,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${GITHUB_REF##*/}" -t "tcpping ${GITHUB_REF##*/v}" --generate-notes
+          gh release create "tcpping-$VERSION" -t "tcpping v$VERSION" --generate-notes
           for asset in tcpping-*/tcpping-*; do
-            gh release upload "${GITHUB_REF##*/}" "$asset" --clobber
+            gh release upload "${GITHUB_REF##*/}" "$asset" --prerelease --clobber
           done
