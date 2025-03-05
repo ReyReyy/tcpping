@@ -72,7 +72,7 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$(grep 'version =' Cargo.toml | cut -d '"' -f2)" >> $GITHUB_ENV
           cd target/${{ matrix.target }}/release
           if [[ "${{ matrix.target }}" == *"-pc-windows-"* ]]; then
             OS="windows"
@@ -124,7 +124,6 @@ jobs:
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${GITHUB_REF#refs/tags/v}
         run: |
           gh release create "tcpping-$VERSION" -t "tcpping v$VERSION" --generate-notes
           for asset in tcpping-*/tcpping-*; do
