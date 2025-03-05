@@ -2,8 +2,11 @@ name: Rust Cross Compile and Release
 
 on:
   push:
+    branches: ["master"]
     tags:
       - "v*"
+    paths:
+      - ".github/workflows/rust.yml"
 
 jobs:
   build:
