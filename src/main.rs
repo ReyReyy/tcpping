@@ -221,7 +221,19 @@ fn main() {
             }
             "-c" | "--count" => {
                 if i + 1 < args.len() {
-                    count = Some(args[i + 1].parse().unwrap_or(0));
+                    let count_str = &args[i + 1];
+                    match count_str.parse::<u32>() {
+                        Ok(0) => {
+                            count = None;
+                        }
+                        Ok(n) => {
+                            count = Some(n);
+                        }
+                        Err(_) => {
+                            eprintln!("Error: Invalid count value.",);
+                            process::exit(1);
+                        }
+                    }
                     i += 2;
                 } else {
                     eprintln!("Error: Count number required after -c");
