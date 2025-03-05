@@ -2,7 +2,6 @@ name: Rust Cross Compile and Release
 
 on:
   push:
-    branches: ["master"]
     tags:
       - "v*"
     paths:
@@ -124,6 +123,7 @@ jobs:
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${GITHUB_REF#refs/tags/v}
         run: |
           gh release create "tcpping-$VERSION" -t "tcpping v$VERSION" --generate-notes
           for asset in tcpping-*/tcpping-*; do
